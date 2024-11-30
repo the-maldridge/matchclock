@@ -5,7 +5,7 @@
 {% block bodystyle %}big-clock{% endblock %}
 
 {% block content %}
-<span class="big-clock">
+<div class="grid-center big-clock">
 {% include "partials/clock.p2" %}
-</span>
+</div>
 {% endblock %}

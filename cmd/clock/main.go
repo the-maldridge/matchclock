@@ -39,7 +39,10 @@ func main() {
 			n:     &http.Server{},
 			tmpls: pongo2.NewSet("html", sbl),
 		}
+		s.tmpls.Debug = true
+
 		s.r.Use(middleware.Heartbeat("/healthz"))
+		s.r.Get("/admin", s.admin)
 		s.r.Get("/clock", s.clock)
 		s.r.Get("/clock/run", s.clockRun)
 		s.r.Post("/clock/start", s.clockStart)
@@ -131,6 +134,10 @@ func (s *Server) doTemplate(w http.ResponseWriter, r *http.Request, tmpl string,
 	}
 }
 
+func (s *Server) admin(w http.ResponseWriter, r *http.Request) {
+	s.doTemplate(w, r, "views/admin.p2", pongo2.Context{})
+}
+
 func (s *Server) clock(w http.ResponseWriter, r *http.Request) {
 	s.doTemplate(w, r, "views/clock.p2", pongo2.Context{})
 }
@@ -152,7 +159,7 @@ func (s *Server) clockStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.t = time.Now().Add(time.Minute * 3)
+	s.t = time.Now().Add(time.Minute*3 + time.Second)
 }
 
 func (s *Server) clockCancel(w http.ResponseWriter, r *http.Request) {

@@ -1,7 +1,5 @@
-<div class="grid-center">
-  <div>
+<div>
     <span id="clock" class="clock">3:00</span>
-  </div>
 </div>
 
 <script>

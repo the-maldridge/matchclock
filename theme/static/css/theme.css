@@ -6,6 +6,9 @@ html, body {
 #content {
     height: 100%;
     width: 100%;
+    background-color: black;
+    color: white;
+    font-family: sans;
 }
 
 .grid-center {
@@ -21,11 +24,41 @@ html, body {
 }
 
 .clock {
-    font-size: 75vh;
+    font-size: 40vw;
 }
 
-.big-clock {
-    background-color: black;
-    color: white;
-    font-family: sans;
+.admin-container {
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.admin-button {
+    width: 100%;
+    font-size: xxx-large;
+    font-weight: xx-bold;
+    text-align: center;
+    border-radius: 4px;
+    border: 2px solid black;
+    padding: 1em;
+}
+
+.admin-button-green {
+    background-color: lightgreen;
+}
+
+.admin-button-green:hover {
+    background-color: green;
+}
+
+.admin-button-red {
+    background-color: red;
+}
+
+.admin-button-red:hover {
+    background-color: darkred;
+}
+
+.hidden {
+    display: none;
 }

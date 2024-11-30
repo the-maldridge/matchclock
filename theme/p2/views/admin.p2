@@ -1,0 +1,57 @@
+{% extends "base.p2" %}
+
+{% block title %}Match Clock Admin{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <span class="center-container">
+        {% include "partials/clock.p2" %}
+    </span>
+  <button id="start-clock" class="admin-button admin-button-green">
+    Start
+  </button>
+  <button id="stop-clock" class="admin-button admin-button-red hidden">
+      Cancel
+  </button>
+</div>
+
+<script>
+ const btnStart = document.getElementById("start-clock")
+ const btnStop = document.getElementById("stop-clock")
+ var clockRunning = false;
+
+
+ var startClock = function() {
+     fetch("clock/start", {method: "POST"}).then(isClockRunning());
+ }
+
+ var stopClock = function() {
+     if (window.confirm("Really stop the clock?")) {
+         fetch("clock/cancel", {method: "POST"}).then(isClockRunning());
+     }
+ }
+
+ var isClockRunning = function() {
+     fetch("clock/run")
+         .then(response => response.json())
+         .then(d => {
+             if (d) {
+                 btnStart.classList.add("hidden");
+                 btnStop.classList.remove("hidden");
+             } else {
+                 btnStart.classList.remove("hidden");
+                 btnStop.classList.add("hidden");
+             }
+         });
+ }
+
+ var checkOnClock = function() {
+     isClockRunning();
+     setTimeout(checkOnClock, 5000);
+ }
+
+ btnStart.addEventListener("click", startClock);
+ btnStop.addEventListener("click", stopClock);
+ checkOnClock();
+</script>
+{% endblock %}
