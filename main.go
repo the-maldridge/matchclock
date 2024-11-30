@@ -2,18 +2,22 @@ package main
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
-	"embed"
-	"io/fs"
 
+	"github.com/faiface/beep"
+	"github.com/faiface/beep/speaker"
+	"github.com/faiface/beep/wav"
 	"github.com/flosch/pongo2/v6"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -52,12 +56,23 @@ func main() {
 		}
 
 		s.r.Use(middleware.Heartbeat("/healthz"))
-		s.r.Get("/admin", s.admin)
-		s.r.Get("/clock", s.clock)
-		s.r.Get("/clock/run", s.clockRun)
-		s.r.Post("/clock/start", s.clockStart)
-		s.r.Post("/clock/cancel", s.clockCancel)
-		s.r.Get("/clock/end", s.clockEnd)
+		s.r.Route("/admin", func(r chi.Router) {
+			r.Route("/clock", func(cr chi.Router) {
+				cr.Get("/", s.clockAdmin)
+				cr.Post("/start", s.clockStart)
+				cr.Post("/cancel", s.clockCancel)
+			})
+			r.Route("/sound", func(sr chi.Router) {
+				sr.Get("/", s.soundAdmin)
+				sr.Post("/play/{file}", s.soundAdminPlay)
+			})
+		})
+
+		s.r.Route("/clock", func(r chi.Router) {
+			r.Get("/", s.clock)
+			r.Get("/run", s.clockRun)
+			r.Get("/end", s.clockEnd)
+		})
 
 		sfs, _ := fs.Sub(tfs, "static")
 		s.fileServer(s.r, "/static", http.FS(sfs))
@@ -146,7 +161,7 @@ func (s *Server) doTemplate(w http.ResponseWriter, r *http.Request, tmpl string,
 	}
 }
 
-func (s *Server) admin(w http.ResponseWriter, r *http.Request) {
+func (s *Server) clockAdmin(w http.ResponseWriter, r *http.Request) {
 	s.doTemplate(w, r, "views/admin.p2", pongo2.Context{})
 }
 
@@ -180,4 +195,34 @@ func (s *Server) clockCancel(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) clockRun(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(s.t.After(time.Now()))
+}
+
+func (s *Server) soundAdmin(w http.ResponseWriter, r *http.Request) {
+	s.doTemplate(w, r, "views/soundboard.p2", pongo2.Context{})
+}
+
+func (s *Server) soundAdminPlay(w http.ResponseWriter, r *http.Request) {
+	file := chi.URLParam(r, "file")
+	s.playSound(file)
+}
+
+func (s *Server) playSound(file string) {
+	f, err := efs.Open(filepath.Join("theme", "sound", file))
+	if err != nil {
+		slog.Error("Failure to open sound", "file", file, "error", err)
+		return
+	}
+	defer f.Close()
+	snd, format, err := wav.Decode(f)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+	done := make(chan struct{})
+	speaker.Play(beep.Seq(snd, beep.Callback(func() {
+		close(done)
+	})))
+	<-done
+	speaker.Close()
 }

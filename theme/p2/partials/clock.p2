@@ -30,7 +30,7 @@
  }
 
  var getClockEnd = function() {
-     fetch("clock/end")
+     fetch("/clock/end")
          .then(response => response.json())
          .then(d => {
              later = new Date(d.MatchEnd).getTime();
@@ -45,7 +45,7 @@
 
  var clockSupervisor = function() {
      prevState = shouldRun;
-     fetch("clock/run")
+     fetch("/clock/run")
          .then(response => response.json())
          .then(d => {
              if (prevState && !d) {

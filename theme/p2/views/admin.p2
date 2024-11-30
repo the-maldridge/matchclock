@@ -22,17 +22,17 @@
 
 
  var startClock = function() {
-     fetch("clock/start", {method: "POST"}).then(isClockRunning());
+     fetch("/admin/clock/start", {method: "POST"}).then(isClockRunning());
  }
 
  var stopClock = function() {
      if (window.confirm("Really stop the clock?")) {
-         fetch("clock/cancel", {method: "POST"}).then(isClockRunning());
+         fetch("/admin/clock/cancel", {method: "POST"}).then(isClockRunning());
      }
  }
 
  var isClockRunning = function() {
-     fetch("clock/run")
+     fetch("/clock/run")
          .then(response => response.json())
          .then(d => {
              if (d) {

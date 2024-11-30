@@ -1,0 +1,38 @@
+{% extends "../base.p2" %}
+
+{% block title %}Match Clock Soundboard{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <button id="match-start" class="admin-button">
+        Match Start
+    </button>
+    <button id="match-end" class="admin-button">
+        Match End
+    </button>
+    <button id="match-fault" class="admin-button">
+        Match Fault
+    </button>
+    <button id="match-warn" class="admin-button">
+        Match Almost Done
+    </button>
+</div>
+
+<script>
+ document.getElementById("match-start").addEventListener("click", function() {
+     fetch("/admin/sound/play/start-of-match.wav", {method: "POST"});
+ });
+
+ document.getElementById("match-end").addEventListener("click", function() {
+     fetch("/admin/sound/play/end-of-match.wav", {method: "POST"});
+ });
+
+ document.getElementById("match-fault").addEventListener("click", function() {
+     fetch("/admin/sound/play/match-fault.wav", {method: "POST"});
+ });
+
+ document.getElementById("match-warn").addEventListener("click", function() {
+     fetch("/admin/sound/play/match-almost-over.wav", {method: "POST"});
+ });
+</script>
+{% endblock %}
