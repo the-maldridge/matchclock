@@ -11,12 +11,15 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"embed"
+	"io/fs"
 
 	"github.com/flosch/pongo2/v6"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+// Server binds all the components of the webserver.
 type Server struct {
 	r chi.Router
 	n *http.Server
@@ -26,20 +29,27 @@ type Server struct {
 	tmpls *pongo2.TemplateSet
 }
 
+//go:embed theme
+var efs embed.FS
+
 func main() {
 	os.Exit(func() int {
-		sbl, err := pongo2.NewSandboxedFilesystemLoader("theme/p2")
-		if err != nil {
-			slog.Error("Error loading templates", "error", err)
-			return 2
+		var tfs fs.FS
+		tfs, _ = fs.Sub(efs, "theme")
+		if _, ok := os.LookupEnv("MATCHCLOCK_DEBUG"); ok {
+			slog.Info("Debug mode enabled")
+			tfs = os.DirFS("theme")
 		}
-
+		tsfs, _ := fs.Sub(tfs, "p2")
 		s := Server{
 			r:     chi.NewRouter(),
 			n:     &http.Server{},
-			tmpls: pongo2.NewSet("html", sbl),
+			tmpls: pongo2.NewSet("html", pongo2.NewFSLoader(tsfs)),
 		}
-		s.tmpls.Debug = true
+
+		if _, ok := os.LookupEnv("MATCHCLOCK_DEBUG"); ok {
+			s.tmpls.Debug = true
+		}
 
 		s.r.Use(middleware.Heartbeat("/healthz"))
 		s.r.Get("/admin", s.admin)
@@ -48,7 +58,9 @@ func main() {
 		s.r.Post("/clock/start", s.clockStart)
 		s.r.Post("/clock/cancel", s.clockCancel)
 		s.r.Get("/clock/end", s.clockEnd)
-		s.fileServer(s.r, "/static", http.Dir("theme/static"))
+
+		sfs, _ := fs.Sub(tfs, "static")
+		s.fileServer(s.r, "/static", http.FS(sfs))
 
 		serverCtx, serverStopCtx := context.WithCancel(context.Background())
 		sig := make(chan os.Signal, 1)

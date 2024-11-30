@@ -1,11 +1,9 @@
-{% extends "base.p2" %}
+{% extends "../base.p2" %}
 
 {% block title %}Match Clock{% endblock %}
 
-{% block bodystyle %}big-clock{% endblock %}
-
 {% block content %}
 <div class="grid-center big-clock">
-{% include "partials/clock.p2" %}
+{% include "../partials/clock.p2" %}
 </div>
 {% endblock %}

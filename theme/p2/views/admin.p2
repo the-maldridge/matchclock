@@ -1,11 +1,11 @@
-{% extends "base.p2" %}
+{% extends "../base.p2" %}
 
 {% block title %}Match Clock Admin{% endblock %}
 
 {% block content %}
 <div class="admin-container">
     <span class="center-container">
-        {% include "partials/clock.p2" %}
+        {% include "../partials/clock.p2" %}
     </span>
   <button id="start-clock" class="admin-button admin-button-green">
     Start
