@@ -1,0 +1,67 @@
+<div class="grid-center">
+  <div>
+    <span id="clock" class="clock">3:00</span>
+  </div>
+</div>
+
+<script>
+ var later = new Date().getTime();
+ var activeTimer;
+ var shouldRun;
+ var paintClock = function() {
+     var now = new Date().getTime();
+     var diff = later - now;
+
+     var minutes = Math.floor(diff % (1000 * 60 * 60)/(1000 * 60));
+     var seconds = Math.floor(diff % (1000 * 60)/1000);
+     var tenths  = Math.floor((diff % 1000)/100);
+
+     if (minutes>=1) {
+         document.getElementById("clock").innerHTML = minutes +":"+(seconds+"").padStart(2, "0");
+         activeTimer = setTimeout(paintClock, 100);
+     } else if (seconds>=0) {
+         document.getElementById("clock").innerHTML = seconds + "." + tenths;
+         activeTimer = setTimeout(paintClock, 100);
+     } else {
+         document.getElementById("clock").innerHTML = "0:00";
+         activeTimer = setTimeout(function() {
+             document.getElementById("clock").innerHTML = "3:00";
+             getClockEnd();
+         }, 10000);
+     }
+ }
+
+ var getClockEnd = function() {
+     fetch("clock/end")
+         .then(response => response.json())
+         .then(d => {
+             later = new Date(d.MatchEnd).getTime();
+             now = new Date().getTime();
+             if (later < now) {
+                 activeTimer = setTimeout(getClockEnd, 1000);
+             } else {
+                 paintClock();
+             }
+         });
+ }
+
+ var clockSupervisor = function() {
+     prevState = shouldRun;
+     fetch("clock/run")
+         .then(response => response.json())
+         .then(d => {
+             if (prevState && !d) {
+                 console.log("Cancelling running clock");
+                 clearTimeout(activeTimer);
+                 setTimeout(function() {
+                     document.getElementById("clock").innerHTML = "3:00";
+                     getClockEnd();
+                 }, 500);
+             }
+             shouldRun = d;
+             setTimeout(clockSupervisor, 2000);
+         });
+ }
+ clockSupervisor();
+ getClockEnd();
+</script>

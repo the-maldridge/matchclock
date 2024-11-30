@@ -1,0 +1,31 @@
+html, body {
+    width: 100%;
+    height: 100%;
+}
+
+#content {
+    height: 100%;
+    width: 100%;
+}
+
+.grid-center {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    width: 100%;
+}
+
+.center-container {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.clock {
+    font-size: 75vh;
+}
+
+.big-clock {
+    background-color: black;
+    color: white;
+    font-family: sans;
+}

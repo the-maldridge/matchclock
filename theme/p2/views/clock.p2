@@ -1,0 +1,11 @@
+{% extends "base.p2" %}
+
+{% block title %}Match Clock{% endblock %}
+
+{% block bodystyle %}big-clock{% endblock %}
+
+{% block content %}
+<span class="big-clock">
+{% include "partials/clock.p2" %}
+</span>
+{% endblock %}
