@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -38,6 +39,28 @@ type Server struct {
 //go:embed theme
 var efs embed.FS
 
+// IPAccessList checks if an IP is contained within MATCHCLOCK_ACL
+func IPAccessList(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ip := net.ParseIP(strings.Split(r.RemoteAddr, ":")[0])
+
+		block := os.Getenv("MATCHCLOCK_ACL")
+		if block == "" {
+			block = "0.0.0.0/0"
+		}
+
+		_, acl, _ := net.ParseCIDR(block)
+		if !acl.Contains(ip) {
+			slog.Warn("Unauthorized access", "ip", ip)
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("Go Away!\n"))
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	os.Exit(func() int {
 		var tfs fs.FS
@@ -59,6 +82,7 @@ func main() {
 
 		s.r.Use(middleware.Heartbeat("/healthz"))
 		s.r.Route("/admin", func(r chi.Router) {
+			r.Use(IPAccessList)
 			r.Route("/clock", func(cr chi.Router) {
 				cr.Get("/", s.clockAdmin)
 				cr.Post("/start", s.clockStart)
