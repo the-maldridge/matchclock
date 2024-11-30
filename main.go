@@ -28,7 +28,9 @@ type Server struct {
 	r chi.Router
 	n *http.Server
 
-	t time.Time
+	t  time.Time
+	et *time.Timer
+	wt *time.Timer
 
 	tmpls *pongo2.TemplateSet
 }
@@ -187,10 +189,16 @@ func (s *Server) clockStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.t = time.Now().Add(time.Minute*3 + time.Second)
+	s.playSound("start-of-match.wav")
+	s.et = time.AfterFunc(s.t.Sub(time.Now()), func() { s.playSound("end-of-match.wav") })
+	s.wt = time.AfterFunc(s.t.Sub(time.Now())-time.Second*30, func() { s.playSound("match-almost-over.wav") })
 }
 
 func (s *Server) clockCancel(w http.ResponseWriter, r *http.Request) {
 	s.t = time.Now()
+	s.et.Stop()
+	s.wt.Stop()
+	s.playSound("match-fault.wav")
 }
 
 func (s *Server) clockRun(w http.ResponseWriter, r *http.Request) {
