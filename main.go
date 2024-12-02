@@ -99,6 +99,9 @@ func main() {
 			r.Get("/run", s.clockRun)
 			r.Get("/end", s.clockEnd)
 		})
+		s.r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/clock", http.StatusMovedPermanently)
+		})
 
 		sfs, _ := fs.Sub(tfs, "static")
 		s.fileServer(s.r, "/static", http.FS(sfs))
