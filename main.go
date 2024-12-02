@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -32,6 +33,9 @@ type Server struct {
 	t  time.Time
 	et *time.Timer
 	wt *time.Timer
+
+	cl *http.Client
+	pokeHost string
 
 	tmpls *pongo2.TemplateSet
 }
@@ -74,6 +78,17 @@ func main() {
 			r:     chi.NewRouter(),
 			n:     &http.Server{},
 			tmpls: pongo2.NewSet("html", pongo2.NewFSLoader(tsfs)),
+			cl: &http.Client{
+				Timeout: time.Second * 10,
+				Transport: &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				},
+			},
+			pokeHost: os.Getenv("MATCHCLOCK_POKEHOST"),
+		}
+
+		if s.pokeHost != "" {
+			slog.Info("Host poking enabled, will poke a host", "host", s.pokeHost)
 		}
 
 		if _, ok := os.LookupEnv("MATCHCLOCK_DEBUG"); ok {
@@ -213,6 +228,15 @@ func (s *Server) clockStart(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusPreconditionFailed)
 		w.Write([]byte("clock already running!\n"))
 		return
+	}
+
+	if s.pokeHost != "" {
+		go func() {
+			slog.Info("Poking host")
+			if _, err := s.cl.Post(s.pokeHost, "text", nil); err != nil {
+				slog.Warn("Error reaching pokehost", "host", s.pokeHost, "error", err)
+			}
+		}()
 	}
 
 	s.t = time.Now().Add(time.Minute*3 + time.Millisecond*500)
