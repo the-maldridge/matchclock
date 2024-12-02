@@ -212,7 +212,7 @@ func (s *Server) clockStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.t = time.Now().Add(time.Minute*3 + time.Second)
+	s.t = time.Now().Add(time.Minute*3 + time.Millisecond*500)
 	s.playSound("start-of-match.wav")
 	s.et = time.AfterFunc(s.t.Sub(time.Now()), func() { s.playSound("end-of-match.wav") })
 	s.wt = time.AfterFunc(s.t.Sub(time.Now())-time.Second*30, func() { s.playSound("match-almost-over.wav") })
