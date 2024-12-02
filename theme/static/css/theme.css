@@ -25,6 +25,7 @@ html, body {
 
 .clock {
     font-size: 40vw;
+    font-family: sans-serif;
 }
 
 .admin-container {
